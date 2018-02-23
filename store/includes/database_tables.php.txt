@@ -1,0 +1,3 @@
+Add the following two instructions anywhere in the database_tables.php file:
+define('TABLE_NOCHEX', DB_PREFIX . 'nochex_apc_transactions');
+define('TABLE_NOCHEX_SESSION', DB_PREFIX . 'nochex_sessions');
