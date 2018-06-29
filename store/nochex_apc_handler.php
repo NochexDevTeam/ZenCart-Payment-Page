@@ -7,31 +7,17 @@
  * @copyright Portions Copyright 2003 osCommerce
  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
  */
- 
-/* Zen cart and Nochex functions */
-
-/*if (!isset($_SESSION['language'])) $_SESSION['language'] = 'english';
-if (file_exists(DIR_WS_LANGUAGES . $_SESSION['language'] . '/' . $template_dir_select . 'checkout_process.php')) {
-  require(DIR_WS_LANGUAGES . $_SESSION['language'] . '/' . $template_dir_select . 'checkout_process.php');
-} else {
-  require(DIR_WS_LANGUAGES . $_SESSION['language'] . '/checkout_process.php');
-}
-*/
-/* ------ */
+  
 /* Include Nochex functions */ 
 require('includes/modules/payment/nochex_apc/nochex_functions.php');
-/*
- Include custom application_top.php */
-require('includes/application_top.php');
-//require('includes/modules/payment/nochex_apc/apc_application_top.php'); doesn't work
-
+/* Include custom application_top.php */
+require('includes/application_top.php'); 
 /* Include checkout_process in relation to the session language **/
 require('includes/languages/english/modules/payment/nochex_apc.php');
 
 /* APC Code */
-
 // Payment confirmation from http post 
-ini_set("SMTP","mail.nochex.com" ); 
+ini_set("SMTP","mail.nochex.com"); 
 $header = "From: apc@nochex.com";
 
 $your_email = $_POST["to_email"];  // your merchant account email address
@@ -60,9 +46,6 @@ function http_post($server, $port, $url, $vars) {
 	
     return $ret; // array 
     } 
-
-// uncomment below to force a DECLINED response 
-//$_POST['order_id'] = "1"; 
   
 $response = http_post("ssl://www.nochex.com", 443, "/apcnet/apc.aspx", $_POST); 
 // stores the response from the Nochex server 
@@ -71,56 +54,58 @@ foreach($_POST as $Index => $Value)
 $debug .= "$Index -> $Value\r\n"; 
 $debug .= "\r\nRESPONSE:\r\n$response";
 // Retrieves the order_id and save it as a variable which can be used in the update query to find a particular record in a database or datatable.	
-	 $order_ID = $_POST['order_id']; 
-// An email to check the order_ID
-	//mail($your_email, "Order_ID Test", $_POST['order_id'] . " and Response" . $response, $header);
-		
+
+$order_ID = $_POST['order_id']; 
+$trans_date = $_POST['transaction_date'];
+$trans_Id = $_POST['transaction_id'];
+$status = $_POST['status'];
+$trans_amount = $_POST["amount"];
+
 if (!strstr($response, "AUTHORISED")) {  // searches response to see if AUTHORISED is present if it isn’t a failure message is displayed
     $msg = "APC was not AUTHORISED.\r\n\r\n$debug";  // displays debug message
 	
 	$new_status = MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID;
+	
     $db->Execute("update " . TABLE_ORDERS  . "
-                    set orders_status = " . MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID . "
-                    where orders_id = '" . $_POST["order_id"] . "'");
+                  set orders_status = " . $new_status . "
+                  where orders_id = '" . $order_ID . "'");
 
-  $comments = 'Nochex payment of '.sprintf("%01.2f", $_POST["amount"]).' received at '.$_POST['transaction_date'].' with transaction ID:'.$_POST['transaction_id']. ' this was a '. $_POST['status'] .' transaction, ' .$msg;
+  $comments = 'Nochex payment of '.sprintf("%01.2f", $trans_amount).' received at '.$trans_date.' with transaction ID:'.$trans_Id. ' this was a '. $status .' transaction, ' .$msg;
   
-   $sql_data_array = array('orders_id' => $_POST["order_id"],
-                          'orders_status_id' => MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID,
+   $sql_data_array = array('orders_id' => $order_ID,
+                          'orders_status_id' => $new_status,
                           'date_added' => 'now()',
                           'comments' => $comments,
                           'customer_notified' => false
   );
   zen_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
-
-  $_SESSION['cart']->reset(true);
   
   
-} 
-else { 
+} else { 
    $msg = "APC was Authorised";
 	
 	$new_status = MODULE_PAYMENT_NOCHEX_PROCESSING_STATUS_ID;
-    $db->Execute("update " . TABLE_ORDERS  . "
+   /* $db->Execute("update " . TABLE_ORDERS  . "
                     set orders_status = " . MODULE_PAYMENT_NOCHEX_PROCESSING_STATUS_ID . "
-                    where orders_id = '" . $_POST["order_id"] . "'");
+                    where orders_id = '" . $order_ID . "'");*/
 
-  $comments = 'Nochex payment of '.sprintf("%01.2f", $_POST["amount"]).' received at '.$_POST['transaction_date'].' with transaction ID:'.$_POST['transaction_id']. ' this was a '. $_POST['status'] .' transaction, ' .$msg;
+  $comments = 'Nochex payment of '.sprintf("%01.2f", $trans_amount).' received at '.$trans_date.' with transaction ID:'.$trans_Id. ' this was a '. $status .' transaction, ' .$msg;
   
-   $sql_data_array = array('orders_id' => $_POST["order_id"],
-                          'orders_status_id' => MODULE_PAYMENT_NOCHEX_PROCESSING_STATUS_ID,
+   $sql_data_array = array('orders_id' => $order_ID,
+                          'orders_status_id' => $new_status,
                           'date_added' => 'now()',
                           'comments' => $comments,
                           'customer_notified' => false
   );
   zen_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
 
-  $_SESSION['cart']->reset(true);
 } 
- 
-// sends an email explaining whether APC was successful or not, the subject will be “APC Debug” but you can change this to whatever you want.
-//mail($your_email, "APC Debug", $msg, $header); 
 
+	/* ini_set("SMTP","mail.nochex.com"); 
+$emailContents = $this->admin_notification($new_order_id);
+mail("james.lugton@nochex.com", "apc", $emailContents, "From:james@nochex.com");*/
+
+ /* $_SESSION['cart']->reset(true);*/
 ?>  
 
 
