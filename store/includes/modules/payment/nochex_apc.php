@@ -60,6 +60,7 @@ class nochex_apc extends base {
     }
     $this->description = MODULE_PAYMENT_NOCHEX_TEXT_DESCRIPTION;
     $this->sort_order = MODULE_PAYMENT_NOCHEX_SORT_ORDER;
+    $this->ncxCallback = MODULE_PAYMENT_NOCHEX_CALLBACK;
     $this->enabled = ((MODULE_PAYMENT_NOCHEX_STATUS == 'True') ? true : false);
     if ((int)MODULE_PAYMENT_NOCHEX_ORDER_STATUS_ID > 0) {
       $this->order_status = MODULE_PAYMENT_NOCHEX_ORDER_STATUS_ID;
@@ -143,9 +144,6 @@ class nochex_apc extends base {
 
     $this->totalsum = $order->info['total'];
 
-    // save the session stuff permanently in case Nochex loses the session
-    //$db->Execute("delete from " . TABLE_NOCHEX_SESSION . " where session_id = '" . session_id() . "'");
-
     $sql = "insert into " . TABLE_NOCHEX_SESSION . " (session_id, saved_session, expiry) values (
             '" . session_id() . "',
             '" . base64_encode(serialize($_SESSION)) . "',
@@ -153,7 +151,7 @@ class nochex_apc extends base {
 
     $db->Execute($sql);
 
-   
+    $my_currency = "GBP";
 // Create a string that contains a listing of products ordered for the description field
     $description = '';
 	
@@ -165,16 +163,13 @@ class nochex_apc extends base {
 	
 	for ($i=0; $i<sizeof($order->products); $i++) {
 	
-		$xmlData .="<item><id>". $order->products[$i]['id'] ."</id><name>". $order->products[$i]['name'] ."</name><description>". $order->products[$i]['name'] ."</description><quantity>". $order->products[$i]['qty'] ."</quantity><price>". $order->products[$i]['price'] ."</price></item>";
+		$xmlData .="<item><id>". $order->products[$i]['id'] ."</id><name>". $order->products[$i]['name'] ."</name><description>". $order->products[$i]['name'] ."</description><quantity>". $order->products[$i]['qty'] ."</quantity><price>". number_format($order->products[$i]['price'], 2) ."</price></item>";
 	
 	}
 	
 	$xmlData .="</items>";
-
-    $my_currency = "GBP";
     $telephone = preg_replace('/\D/', '', $order->customer['telephone']);
     $payment_fields = array();
-
 
   			$billing_address = array();
   			if(strlen($order->customer['street_address'])>0) $billing_address[] = $order->customer['street_address'];
@@ -184,47 +179,55 @@ class nochex_apc extends base {
   			if(strlen($order->delivery['street_address'])>0) $delivery_address[] = $order->delivery['street_address'];
   			if(strlen($order->delivery['suburb'])>0) $delivery_address[] = $order->delivery['suburb'];
         
-          $merchant_id = MODULE_PAYMENT_NOCHEX_MERCHANT_ID;
+        $merchant_id = MODULE_PAYMENT_NOCHEX_MERCHANT_ID;
         
         $payment_fields[] = zen_draw_hidden_field('merchant_id', $merchant_id);
-           $last_order_id = $db->Execute("select * from " . TABLE_ORDERS . " order by orders_id desc limit 1");
-    $new_order_id = $last_order_id->fields['orders_id'];
-    $new_order_id = ($new_order_id + 1);
-	
-		$payment_fields[] = zen_draw_hidden_field('order_id', $new_order_id);
+		
+        $last_order_id = $db->Execute("select * from " . TABLE_ORDERS . " order by orders_id desc limit 1");
+        $new_order_id = $last_order_id->fields['orders_id'];
+        $new_order_id = ($new_order_id + 1);
+				
+        $payment_fields[] = zen_draw_hidden_field('order_id', $new_order_id);
         $payment_fields[] = zen_draw_hidden_field('success_url', zen_href_link(FILENAME_CHECKOUT_PROCESS, 'referer=nochex_apc', 'NONSSL'));
         $payment_fields[] = zen_draw_hidden_field('test_success_url', zen_href_link(FILENAME_CHECKOUT_PROCESS, 'referer=nochex_apc', 'NONSSL'));
-        $payment_fields[] = zen_draw_hidden_field('cancel_url', zen_href_link(FILENAME_CHECKOUT_PAYMENT, '', 'NONSSL'));
-        $payment_fields[] = zen_draw_hidden_field('callback_url', zen_href_link('nochex_apc_handler.php', '', 'NONSSL',false,false,true));
-        
+        $payment_fields[] = zen_draw_hidden_field('cancel_url', zen_href_link(FILENAME_CHECKOUT_PAYMENT, '', 'NONSSL'));          
         $payment_fields[] = zen_draw_hidden_field('optional_1', zen_session_name() . '=' . zen_session_id() );
         $payment_fields[] = zen_draw_hidden_field('billing_fullname', $order->customer['firstname']." ".$order->customer['lastname']);
         $payment_fields[] = zen_draw_hidden_field('billing_address', implode("\r\n", $billing_address));
-        $payment_fields[] = zen_draw_hidden_field('billing_city', $order->delivery['city']);
-        $payment_fields[] = zen_draw_hidden_field('billing_postcode', $order->customer['postcode']);
-		
+        $payment_fields[] = zen_draw_hidden_field('billing_city', $order->customer['city']);
+        $payment_fields[] = zen_draw_hidden_field('billing_country', $order->customer['country']['iso_code_2']);
+        $payment_fields[] = zen_draw_hidden_field('billing_postcode', $order->customer['postcode']);		
         $payment_fields[] = zen_draw_hidden_field('delivery_fullname', $order->customer['firstname']." ".$order->delivery['lastname']);
         $payment_fields[] = zen_draw_hidden_field('delivery_address', implode("\r\n", $delivery_address));
         $payment_fields[] = zen_draw_hidden_field('delivery_city', $order->delivery['city']);
-        $payment_fields[] = zen_draw_hidden_field('delivery_postcode', $order->delivery['postcode']);		
-		
+        $payment_fields[] = zen_draw_hidden_field('delivery_country', $order->delivery['country']['iso_code_2']);
+        $payment_fields[] = zen_draw_hidden_field('delivery_postcode', $order->delivery['postcode']);				
         $payment_fields[] = zen_draw_hidden_field('customer_phone_number', $telephone);
         $payment_fields[] = zen_draw_hidden_field('email_address', $order->customer['email_address']);
-        if(MODULE_PAYMENT_NOCHEX_TESTING=="Test"){
-          $payment_fields[] = zen_draw_hidden_field('test_transaction', '100');
-        }
-		if(MODULE_PAYMENT_NOCHEX_POSTAGE=="Yes"){
-		$payment_fields[] = zen_draw_hidden_field('amount', number_format(($order->info['total'] - $order->info['shipping_cost']) * $currencies->get_value($my_currency), $currencies->get_decimal_places($my_currency)));
-        $payment_fields[] = zen_draw_hidden_field('postage', number_format($order->info['shipping_cost'] + $order->info['shipping_tax'] * $currencies->get_value($my_currency), $currencies->get_decimal_places($my_currency)));
+		
+		
+		if($this->ncxCallback == "Enabled"){
+			$payment_fields[] = zen_draw_hidden_field('callback_url', zen_href_link('nochex_callback_handler.php', '', 'NONSSL',false,false,true));      
 		}else{
-		$payment_fields[] = zen_draw_hidden_field('amount', number_format(($order->info['total'] + $order->info['shipping_tax']) * $currencies->get_value($my_currency), $currencies->get_decimal_places($my_currency)));
+			$payment_fields[] = zen_draw_hidden_field('callback_url', zen_href_link('nochex_apc_handler.php', '', 'NONSSL',false,false,true));      
+		}
+		
+		if(MODULE_PAYMENT_NOCHEX_TESTING=="Test"){
+			$payment_fields[] = zen_draw_hidden_field('test_transaction', '100');
+		}
+		
+		if(MODULE_PAYMENT_NOCHEX_POSTAGE=="Yes"){
+			$payment_fields[] = zen_draw_hidden_field('amount', number_format(($order->info['total'] - $order->info['shipping_cost']) * $currencies->get_value($my_currency), $currencies->get_decimal_places($my_currency)));
+			$payment_fields[] = zen_draw_hidden_field('postage', number_format($order->info['shipping_cost'] + $order->info['shipping_tax'] * $currencies->get_value($my_currency), $currencies->get_decimal_places($my_currency)));
+		}else{
+			$payment_fields[] = zen_draw_hidden_field('amount', number_format(($order->info['total'] + $order->info['shipping_tax']) * $currencies->get_value($my_currency), $currencies->get_decimal_places($my_currency)));
 		}
 		
 		if(MODULE_PAYMENT_NOCHEX_XMLITEMCOLLECTION=="Yes"){
-          $payment_fields[] = zen_draw_hidden_field('xml_item_collection', $xmlData);
-		  $payment_fields[] = zen_draw_hidden_field('description', 'Order created for: ' . $nochex_order_id);
-        }else{
-		  $payment_fields[] = zen_draw_hidden_field('description', $description);
+			$payment_fields[] = zen_draw_hidden_field('xml_item_collection', $xmlData);
+			$payment_fields[] = zen_draw_hidden_field('description', 'Order created for: ' . $nochex_order_id);
+		}else{
+			$payment_fields[] = zen_draw_hidden_field('description', $description);
 		}
    
     return "\r\n".implode("\r\n", $payment_fields)."\r\n";
@@ -266,8 +269,7 @@ class nochex_apc extends base {
   }
   
   /**
-    * Checks referrer
-    *
+    * Checks referrer 
     * @param string $zf_domain
     * @return boolean
     */
@@ -275,8 +277,7 @@ class nochex_apc extends base {
     return true;
   }
   /**
-    * Build admin-page components
-    *
+    * Build admin-page components 
     * @param int $zf_order_id
     * @return string
     */
@@ -289,8 +290,7 @@ class nochex_apc extends base {
     return $output;
   }
   /**
-   * Post-processing activities
-   *
+   * Post-processing activities 
    * @return boolean
     */
   function after_process() {
@@ -298,8 +298,7 @@ class nochex_apc extends base {
     return false;
   }
   /**
-   * Used to display error message details
-   *
+   * Used to display error message details 
    * @return boolean
     */
   function output_error() {
@@ -330,19 +329,11 @@ class nochex_apc extends base {
     $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, use_function, date_added) values ('Set Pending Notification Status', 'MODULE_PAYMENT_NOCHEX_PROCESSING_STATUS_ID', '" . DEFAULT_ORDERS_STATUS_ID .  "', 'Set the status of orders made with this payment module that are not yet completed to this value<br />(\'Pending\' recommended)', '2', '0', 'zen_cfg_pull_down_order_statuses(', 'zen_get_order_status_name', now())");
     $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, use_function, date_added) values ('Set Order Status', 'MODULE_PAYMENT_NOCHEX_ORDER_STATUS_ID', '2', 'Set the status of orders made with this payment module that have completed payment to this value<br />(\'Processing\' recommended)', '2', '1', 'zen_cfg_pull_down_order_statuses(', 'zen_get_order_status_name', now())");
     $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Sort order of display.', 'MODULE_PAYMENT_NOCHEX_SORT_ORDER', '0', 'Sort order of display. Lowest is displayed first.', '2', '2', now())");
-    
-	/* New Features*/
-
-	    $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Detailed Product Information', 'MODULE_PAYMENT_NOCHEX_XMLITEMCOLLECTION', 'No', 'Display Product Details Information in a structured format on your Payment Page', '4', '1', 'zen_cfg_select_option(array(\'No\', \'Yes\'), ', now())");
-		
-		$db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Postage', 'MODULE_PAYMENT_NOCHEX_POSTAGE', 'No', 'Display Postage on your Payment Page', '4', '1', 'zen_cfg_select_option(array(\'No\', \'Yes\'), ', now())");
- 	/* New Features*/   
-	
-	
-	// Nochex testing options go here
+    $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Detailed Product Information', 'MODULE_PAYMENT_NOCHEX_XMLITEMCOLLECTION', 'No', 'Display Product Details Information in a structured format on your Payment Page', '4', '1', 'zen_cfg_select_option(array(\'No\', \'Yes\'), ', now())");
+    $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Postage', 'MODULE_PAYMENT_NOCHEX_POSTAGE', 'No', 'Display Postage on your Payment Page', '4', '1', 'zen_cfg_select_option(array(\'No\', \'Yes\'), ', now())");
     $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Debug Mode', 'MODULE_PAYMENT_NOCHEX_APC_DEBUG', 'Off', 'Enable debug logging? <br />NOTE: This can REALLY clutter your email inbox!<br />Logging goes to the /includes/modules/payment/nochex_apc/logs folder<br />Email goes to the store-owner address.<strong>Leave OFF for normal operation.</strong>', '4', '0', 'zen_cfg_select_option(array(\'Off\',\'Log File\',\'Log and Email\'), ', now())");
+    $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Callback feature', 'MODULE_PAYMENT_NOCHEX_CALLBACK', 'Disabled', 'Enable this option to use our callback system, Note: you may need to contact your account manager or raise a support ticket to get this feature enabled on your Nochex account.', '4', '1', 'zen_cfg_select_option(array(\'Enabled\', \'Disabled\'), ', now())");
     $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Status Live/Testing', 'MODULE_PAYMENT_NOCHEX_TESTING', 'Live', 'Set Nochex module to Live or Test. In Test mode no money is transferred.', '4', '1', 'zen_cfg_select_option(array(\'Live\', \'Test\'), ', now())");
-
     $this->notify('NOTIFY_PAYMENT_NOCHEX_INSTALLED');
   }
   /**
@@ -355,24 +346,22 @@ class nochex_apc extends base {
     $this->notify('NOTIFY_PAYMENT_NOCHEX_UNINSTALLED');
   }
   /**
-   * Internal list of configuration keys used for configuration of the module
-   *
+   * Internal list of configuration keys used for configuration of the module 
    * @return array
     */
   function keys() {
-    $keys_list = array(
-                       'MODULE_PAYMENT_NOCHEX_STATUS',
+    $keys_list = array('MODULE_PAYMENT_NOCHEX_STATUS',
                        'MODULE_PAYMENT_NOCHEX_MERCHANT_ID',
                        'MODULE_PAYMENT_NOCHEX_ZONE',
                        'MODULE_PAYMENT_NOCHEX_PROCESSING_STATUS_ID',
                        'MODULE_PAYMENT_NOCHEX_ORDER_STATUS_ID',
                        'MODULE_PAYMENT_NOCHEX_SORT_ORDER',
-					   'MODULE_PAYMENT_NOCHEX_XMLITEMCOLLECTION',
-					   'MODULE_PAYMENT_NOCHEX_POSTAGE');
-
-    // testing/debug options go here:
-    $keys_list[]='MODULE_PAYMENT_NOCHEX_APC_DEBUG';
-    $keys_list[]='MODULE_PAYMENT_NOCHEX_TESTING';  /* this is for test tools, for developers only */
+		       'MODULE_PAYMENT_NOCHEX_XMLITEMCOLLECTION',
+		       'MODULE_PAYMENT_NOCHEX_POSTAGE',
+		       'MODULE_PAYMENT_NOCHEX_APC_DEBUG',
+		       'MODULE_PAYMENT_NOCHEX_CALLBACK',
+		       'MODULE_PAYMENT_NOCHEX_TESTING');
+ 
     return $keys_list;
   }
 }
