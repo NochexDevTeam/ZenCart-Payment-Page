@@ -41,7 +41,7 @@ function http_post($server, $port, $url, $vars) {
     fputs($fp, $urlencoded);  
   
     $ret = ""; 
-    while (!feof($fp)) $ret .= fgets($fp, 1024); // while it’s not the end of the file it will loop 
+    while (!feof($fp)) $ret .= fgets($fp, 1024); // while itâ€™s not the end of the file it will loop 
     fclose($fp);  // closes the connection
 	
     return $ret; // array 
@@ -61,7 +61,7 @@ $trans_Id = $_POST['transaction_id'];
 $status = $_POST['status'];
 $trans_amount = $_POST["amount"];
 
-if (!strstr($response, "AUTHORISED")) {  // searches response to see if AUTHORISED is present if it isn’t a failure message is displayed
+if (!strstr($response, "AUTHORISED")) {  // searches response to see if AUTHORISED is present if it isnâ€™t a failure message is displayed
     $msg = "APC was not AUTHORISED.\r\n\r\n$debug";  // displays debug message
 	
 	$new_status = MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID;
@@ -101,11 +101,6 @@ if (!strstr($response, "AUTHORISED")) {  // searches response to see if AUTHORIS
 
 } 
 
-	/* ini_set("SMTP","mail.nochex.com"); 
-$emailContents = $this->admin_notification($new_order_id);
-mail("james.lugton@nochex.com", "apc", $emailContents, "From:james@nochex.com");*/
-
- /* $_SESSION['cart']->reset(true);*/
 ?>  
 
 
