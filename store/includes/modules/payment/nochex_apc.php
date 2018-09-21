@@ -65,6 +65,12 @@ class nochex_apc extends base {
     if ((int)MODULE_PAYMENT_NOCHEX_ORDER_STATUS_ID > 0) {
       $this->order_status = MODULE_PAYMENT_NOCHEX_ORDER_STATUS_ID;
     }
+	if (!IS_ADMIN_FLAG) {
+	  global $order;
+	  if ($order->info['total'] > 1999) {
+		$this->enabled = false;
+	  }
+	}
     if (is_object($order)) $this->update_status();
     $this->form_action_url = 'https://secure.nochex.com/default.aspx';
   }
@@ -156,8 +162,12 @@ class nochex_apc extends base {
     $description = '';
 	
 	for ($i=0; $i<sizeof($order->products); $i++) {
-	   $description = $order->products[$i]['name'] . ' (qty: ' . $order->products[$i]['qty'] . ')';
+	  $description .= ' Item:' . $order->products[$i]['name'] . ', Qty: ' . $order->products[$i]['qty'] . ', Price each:  '. money_format('%.2n',$order->products[$i]['price']) . '';
 	}
+	
+	$totalTax = $order->info['tax'] + $order->info['shipping_tax'];
+	
+	$shipping_description = "VAT added on products and postage: " . money_format('%.2n',$totalTax);
 	
 	$xmlData = "<items>";
 	
@@ -225,9 +235,9 @@ class nochex_apc extends base {
 		
 		if(MODULE_PAYMENT_NOCHEX_XMLITEMCOLLECTION=="Yes"){
 			$payment_fields[] = zen_draw_hidden_field('xml_item_collection', $xmlData);
-			$payment_fields[] = zen_draw_hidden_field('description', 'Order created for: ' . $nochex_order_id);
+			$payment_fields[] = zen_draw_hidden_field('description', 'Order created for: #' . $new_order_id . ", " . $shipping_description);
 		}else{
-			$payment_fields[] = zen_draw_hidden_field('description', $description);
+			$payment_fields[] = zen_draw_hidden_field('description', $description . ", " . $shipping_description);
 		}
    
     return "\r\n".implode("\r\n", $payment_fields)."\r\n";
