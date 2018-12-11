@@ -62,34 +62,23 @@ $status = $_POST['status'];
 $trans_amount = $_POST["amount"];
 
 if (!strstr($response, "AUTHORISED")) {  // searches response to see if AUTHORISED is present if it isn’t a failure message is displayed
+
     $msg = "APC was not AUTHORISED.\r\n\r\n$debug";  // displays debug message
 	
-	$new_status = MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID;
+    $new_status = MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID;
 	
     $db->Execute("update " . TABLE_ORDERS  . "
                   set orders_status = " . $new_status . "
-                  where orders_id = '" . $order_ID . "'");
-
-  $comments = 'Nochex payment of '.sprintf("%01.2f", $trans_amount).' received at '.$trans_date.' with transaction ID:'.$trans_Id. ' this was a '. $status .' transaction, ' .$msg;
-  
-   $sql_data_array = array('orders_id' => $order_ID,
-                          'orders_status_id' => $new_status,
-                          'date_added' => 'now()',
-                          'comments' => $comments,
-                          'customer_notified' => false
-  );
-  zen_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
-  
-  
+                  where orders_id = '" . $order_ID . "'");  
 } else { 
+
    $msg = "APC was Authorised";
 	
-	$new_status = MODULE_PAYMENT_NOCHEX_PROCESSING_STATUS_ID;
-   /* $db->Execute("update " . TABLE_ORDERS  . "
-                    set orders_status = " . MODULE_PAYMENT_NOCHEX_PROCESSING_STATUS_ID . "
-                    where orders_id = '" . $order_ID . "'");*/
+   $new_status = MODULE_PAYMENT_NOCHEX_PROCESSING_STATUS_ID;
+   
+} 
 
-  $comments = 'Nochex payment of '.sprintf("%01.2f", $trans_amount).' received at '.$trans_date.' with transaction ID:'.$trans_Id. ' this was a '. $status .' transaction, ' .$msg;
+   $comments = 'Nochex payment of '.sprintf("%01.2f", $trans_amount).' received at '.$trans_date.' with transaction ID:'.$trans_Id. ' this was a '. $status .' transaction, ' .$msg;
   
    $sql_data_array = array('orders_id' => $order_ID,
                           'orders_status_id' => $new_status,
@@ -97,10 +86,7 @@ if (!strstr($response, "AUTHORISED")) {  // searches response to see if AUTHORIS
                           'comments' => $comments,
                           'customer_notified' => false
   );
+  
   zen_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
 
-} 
-
 ?>  
-
-
