@@ -33,7 +33,7 @@
 		fputs($fp, $headers);  //writes to file pointer
 		fputs($fp, $urlencoded);   
 		$ret = ""; 
-    while (!feof($fp)) $ret .= fgets($fp, 1024); // while it’s not the end of the file it will loop 
+    while (!feof($fp)) $ret .= fgets($fp, 1024); // while itâ€™s not the end of the file it will loop 
 		fclose($fp);  // closes the connection 
     return $ret; // array 
     } 
@@ -60,30 +60,21 @@
  
 	if (!strstr($response, "AUTHORISED")) {   
 		$msg = "Callback was not AUTHORISED.\r\n\r\n$debug";   
-		$new_status = MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID;
-		/*$db->Execute("update " . TABLE_ORDERS  . "
-					  set orders_status = " . $new_status . "
-					  where orders_id = '" . $order_ID . "'");*/
-		$comments = 'Nochex payment of '.sprintf("%01.2f", $trans_amount).' received at '.$trans_date.' with transaction ID:'.$trans_Id. ' this was a '. $status .' transaction, ' .$msg;  
-		$sql_data_array = array('orders_id' => $order_ID,
-							  'orders_status_id' => $new_status,
-							  'date_added' => 'now()',
-							  'comments' => $comments,
-							  'customer_notified' => false
-    );
-	zen_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
+		$new_status = MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID;	
 	} else { 
 		$msg = "Callback was Authorised";	
 		$new_status = MODULE_PAYMENT_NOCHEX_PROCESSING_STATUS_ID; 
-		$comments = 'Nochex payment of '.sprintf("%01.2f", $trans_amount).' received at '.$trans_date.' with transaction ID:'.$trans_Id. ' this was a '. $status .' transaction, ' .$msg;  
-		$sql_data_array = array('orders_id' => $order_ID,
+	} 
+	
+	$comments = 'Nochex payment of '.sprintf("%01.2f", $trans_amount).' received at '.$trans_date.' with transaction ID:'.$trans_Id. ' this was a '. $status .' transaction, ' .$msg;  
+	
+	$sql_data_array = array('orders_id' => $order_ID,
 							  'orders_status_id' => $new_status,
 							  'date_added' => 'now()',
 							  'comments' => $comments,
 							  'customer_notified' => false
    );
    zen_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array); 
-} 
  
 ?>  
 
