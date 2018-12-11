@@ -8,6 +8,10 @@ To Install and Setup the Nochex module please follow our integration guide, whic
 Changelog
 =====================
 
+= 1.2.1 = 
+
+- Minor update to reduce duplicated code, and in relation to Zen Cart update
+
 = 1.2 = 
 
 - Updated the module to pre-populate the billing country on the payment page
