@@ -218,9 +218,9 @@ class nochex_apc extends base {
 		
 		if(MODULE_PAYMENT_NOCHEX_POSTAGE=="Yes"){
 			$payment_fields[] = zen_draw_hidden_field('amount', number_format(($order->info['total'] - $order->info['shipping_cost']) * $currencies->get_value($my_currency), $currencies->get_decimal_places($my_currency)));
-			$payment_fields[] = zen_draw_hidden_field('postage', number_format($order->info['shipping_cost'] + $order->info['shipping_tax'] * $currencies->get_value($my_currency), $currencies->get_decimal_places($my_currency)));
+			$payment_fields[] = zen_draw_hidden_field('postage', number_format($order->info['shipping_cost'] * $currencies->get_value($my_currency), $currencies->get_decimal_places($my_currency)));
 		}else{
-			$payment_fields[] = zen_draw_hidden_field('amount', number_format(($order->info['total'] + $order->info['shipping_tax']) * $currencies->get_value($my_currency), $currencies->get_decimal_places($my_currency)));
+			$payment_fields[] = zen_draw_hidden_field('amount', number_format(($order->info['total']) * $currencies->get_value($my_currency), $currencies->get_decimal_places($my_currency)));
 		}
 		
 		if(MODULE_PAYMENT_NOCHEX_XMLITEMCOLLECTION=="Yes"){
@@ -239,7 +239,8 @@ class nochex_apc extends base {
   function before_process() {
     global $order_total_modules, $order;
  
-      //$order_total_modules->process();
+	$order = new order;  
+        //$order_total_modules->process();
 	$order_total_modules = new order_total();
 	$order_totals = $order_total_modules->process();
 	  
