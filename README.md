@@ -8,6 +8,14 @@ To Install and Setup the Nochex module please follow our integration guide, whic
 Changelog
 =====================
 
+= 1.2.3 =
+
+- Small update in relation to version 1.5.6a - extra field (updated by) in orders 
+
+= 1.2.2 =
+
+- Minor update to resolve issue when a customer is returned from making a payment, and totals showing incorrectly.
+
 = 1.2.1 = 
 
 - Minor update to reduce duplicated code, and in relation to Zen Cart update
