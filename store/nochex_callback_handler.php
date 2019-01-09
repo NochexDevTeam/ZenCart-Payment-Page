@@ -72,8 +72,9 @@
 							  'orders_status_id' => $new_status,
 							  'date_added' => 'now()',
 							  'comments' => $comments,
-							  'customer_notified' => false
-   );
+							  'customer_notified' => false,
+                                                          'updated_by' => 'Nochex');
+
    zen_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array); 
  
 ?>  
