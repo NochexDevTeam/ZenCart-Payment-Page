@@ -63,17 +63,12 @@ $trans_amount = $_POST["amount"];
 
 if (!strstr($response, "AUTHORISED")) {  // searches response to see if AUTHORISED is present if it isn’t a failure message is displayed
 
-    $msg = "APC was not AUTHORISED.\r\n\r\n$debug";  // displays debug message
-	
+    $msg = "APC was not AUTHORISED.\r\n\r\n$debug";  // displays debug message	
     $new_status = MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID;
-	
-    $db->Execute("update " . TABLE_ORDERS  . "
-                  set orders_status = " . $new_status . "
-                  where orders_id = '" . $order_ID . "'");  
+
 } else { 
 
-   $msg = "APC was Authorised";
-	
+   $msg = "APC was Authorised";	
    $new_status = MODULE_PAYMENT_NOCHEX_PROCESSING_STATUS_ID;
    
 } 
@@ -84,7 +79,8 @@ if (!strstr($response, "AUTHORISED")) {  // searches response to see if AUTHORIS
                           'orders_status_id' => $new_status,
                           'date_added' => 'now()',
                           'comments' => $comments,
-                          'customer_notified' => false
+                          'customer_notified' => false,
+                           'updated_by' => 'Nochex'
   );
   
   zen_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
