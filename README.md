@@ -8,6 +8,12 @@ To Install and Setup the Nochex module please follow our integration guide, whic
 Changelog
 =====================
 
+= 1.2.4 =
+
+- Update to merge together the Callback and APC pages into one single file 
+- Minor update to the Payment Form
+- Removed Callback Option from the admin section as Callback built into the module as opposed to a choice.
+
 = 1.2.3 =
 
 - Small update in relation to version 1.5.6a - extra field (updated by) in orders 
