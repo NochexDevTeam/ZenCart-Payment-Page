@@ -23,6 +23,7 @@ $header = "From: apc@nochex.com";
 $your_email = $_POST["to_email"];  // your merchant account email address
   
 function http_post($server, $port, $url, $vars) { 
+
     // get urlencoded vesion of $vars array 
     $urlencoded = ""; 
     foreach ($vars as $Index => $Value) // loop round variables and encode them to be used in query
@@ -45,8 +46,54 @@ function http_post($server, $port, $url, $vars) {
     fclose($fp);  // closes the connection
 	
     return $ret; // array 
-    } 
-  
+	
+} 
+
+if (isset($_POST["order_id"])){
+
+if($_POST["optional_2"] == "cb"){
+
+// stores the response from the Nochex server   
+	$response = http_post("ssl://secure.nochex.com", 443, "/callback/callback.aspx", $_POST); 
+
+	// Callback Debug
+	$debug = "IP -> " . $_SERVER['REMOTE_ADDR'] ."\r\n\r\nPOST DATA:\r\n"; 
+	foreach($_POST as $Index => $Value) 
+	$debug .= "$Index -> $Value\r\n"; 
+	$debug .= "\r\nRESPONSE:\r\n$response"; 
+
+	if ($_POST['transaction_status'] == "100"){
+		$status = " TEST";
+	}else{
+		$status = " LIVE";
+	}
+
+		$order_ID = $_POST['order_id']; 
+		$trans_date = $_POST['transaction_date'];
+		$trans_Id = $_POST['transaction_id']; 
+		$trans_amount = $_POST["amount"]; 
+ 
+	if (!strstr($response, "AUTHORISED")) {   
+		$msg = "Callback was not AUTHORISED.\r\n\r\n$debug";   
+		$new_status = MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID;	
+	} else { 
+		$msg = "Callback was Authorised";	
+		$new_status = MODULE_PAYMENT_NOCHEX_PROCESSING_STATUS_ID; 
+	} 
+	
+	$comments = 'Nochex payment of '.sprintf("%01.2f", $trans_amount).' received at '.$trans_date.' with transaction ID:'.$trans_Id. ' this was a '. $status .' transaction, ' .$msg;  
+	
+	$sql_data_array = array('orders_id' => $order_ID,
+							  'orders_status_id' => $new_status,
+							  'date_added' => 'now()',
+							  'comments' => $comments,
+							  'customer_notified' => false,
+                                                          'updated_by' => 'Nochex');
+
+   zen_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array); 
+
+}else{
+
 $response = http_post("ssl://www.nochex.com", 443, "/apcnet/apc.aspx", $_POST); 
 // stores the response from the Nochex server 
 $debug = "IP -> " . $_SERVER['REMOTE_ADDR'] ."\r\n\r\nPOST DATA:\r\n"; 
@@ -80,9 +127,13 @@ if (!strstr($response, "AUTHORISED")) {  // searches response to see if AUTHORIS
                           'date_added' => 'now()',
                           'comments' => $comments,
                           'customer_notified' => false,
-                           'updated_by' => 'Nochex'
+                          'updated_by' => 'Nochex'
   );
   
   zen_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
+
+}
+
+}
 
 ?>  
