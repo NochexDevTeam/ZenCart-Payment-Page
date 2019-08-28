@@ -179,7 +179,13 @@ class nochex_apc extends base {
   			if(strlen($order->delivery['street_address'])>0) $delivery_address[] = $order->delivery['street_address'];
   			if(strlen($order->delivery['suburb'])>0) $delivery_address[] = $order->delivery['suburb'];
         
-        $merchant_id = MODULE_PAYMENT_NOCHEX_MERCHANT_ID;
+        if(MODULE_PAYMENT_NOCHEX_MERCHANT_ID == 0){	
+	$ssql = "select configuration_value from " . TABLE_CONFIGURATION . " where configuration_key = 'MODULE_PAYMENT_NOCHEX_MERCHANT_ID'" ;
+    	$merchannt = $db->Execute($ssql);
+	$merchant_id = $merchannt->fields["configuration_value"];
+	}else{	
+	$merchant_id = MODULE_PAYMENT_NOCHEX_MERCHANT_ID;
+	}
         
         $payment_fields[] = zen_draw_hidden_field('merchant_id', $merchant_id);
 		
