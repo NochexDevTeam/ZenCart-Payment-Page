@@ -8,6 +8,10 @@ To Install and Setup the Nochex module please follow our integration guide, whic
 Changelog
 =====================
 
+= 1.2.5 =
+
+  - Small bug fixed in relation to Merchant ID not being picked up on the front end
+
 = 1.2.4 =
 
 - Update to merge together the Callback and APC pages into one single file 
