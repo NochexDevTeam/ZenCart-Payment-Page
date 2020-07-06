@@ -34,16 +34,12 @@ function apc_debug_email($message, $email_address = MODULE_PAYMENT_NOCHEX_MERCHA
 
 function apc_get_stored_session($session_stuff) {
   global $db;
-  if (!is_array($session_stuff)) {
-    ipn_debug_email('APC FATAL ERROR::Could not find custom variable in post, cannot re-create session'); 
-    return false;
-  }
-  $sql = "SELECT * 
-          FROM " . TABLE_NOCHEX_SESSION . " 
-          WHERE session_id = :sessionID";
-  $sql = $db->bindVars($sql, ':sessionID', $session_stuff[1], 'string'); 
+  
+  $sql = 'SELECT * 
+          FROM ' . TABLE_NOCHEX_SESSION . ' 
+          WHERE session_id = "'.$session_stuff.'"';
+		  
   $stored_session = $db->Execute($sql);
-  apc_debug_email('APC Session Query: '.$sql."\n\n\n\$session_stuff = ".print_r($session_stuff, true));
   if ($stored_session->recordCount() < 1) {
     apc_debug_email('APC FATAL ERROR::Could not find stored session in DB, cannot re-create session'); 
     return false;
