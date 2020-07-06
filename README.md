@@ -8,6 +8,13 @@ To Install and Setup the Nochex module please follow our integration guide, whic
 Changelog
 =====================
 
+= 1.2.6 =
+
+ - Removed outdated file 
+ - bug fixes and file tidy up
+ - session fixes
+ - removed deprecated definitions and class name
+ 
 = 1.2.5 =
 
   - Small bug fixed in relation to Merchant ID not being picked up on the front end
