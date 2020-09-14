@@ -102,10 +102,10 @@ if($_POST["optional_2"] == "cb"){
  
 	if (!strstr($response, "AUTHORISED")) {   
 		$msg = "Callback was not AUTHORISED.";   
-		$new_status = defined('MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID');	
+		$new_status = defined('MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID') ? MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID : 0;
 	} else { 
 		$msg = "Callback was Authorised";	
-		$new_status = defined('MODULE_PAYMENT_NOCHEX_PROCESSING_STATUS_ID'); 
+		$new_status = defined('MODULE_PAYMENT_NOCHEX_PROCESSING_STATUS_ID') ? MODULE_PAYMENT_NOCHEX_PROCESSING_STATUS_ID : 0; 
 	} 
 	
 	$comments = 'Nochex payment of '.sprintf("%01.2f", $trans_amount).' received at '.$trans_date.' with transaction ID:'.$trans_Id. ' this was a '. $status .' transaction, ' .$msg;     
@@ -148,12 +148,12 @@ $trans_amount = $_POST["amount"];
 if (!strstr($response, "AUTHORISED")) {  // searches response to see if AUTHORISED is present if it isn’t a failure message is displayed
 
     $msg = "APC was not AUTHORISED.";  // displays debug message	
-    $new_status = defined('MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID');
+    $new_status = defined('MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID')  ? MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID : 0;
 
 } else { 
 
    $msg = "APC was Authorised";	
-   $new_status = defined('MODULE_PAYMENT_NOCHEX_PROCESSING_STATUS_ID');
+   $new_status = defined('MODULE_PAYMENT_NOCHEX_PROCESSING_STATUS_ID') ? MODULE_PAYMENT_NOCHEX_PROCESSING_STATUS_ID : 0;
    
 } 
 
@@ -208,8 +208,9 @@ if ($checkSession == true) {
 	  $_SESSION['order_number_created'] = $insert_id;
 	  
 	  $order->create_add_products($insert_id, 2);
+	  /*deprecated function and variables that are causing warning php error logs when creating and sending email in includes/classes/order.php - lines 1060 to 1205 but still works for sending email confirmation */
 	  $order->send_order_email($insert_id);
-    
+	
 	  $sql_data_array = array('orders_id' => $insert_id,
 							  'orders_status_id' => $new_status,
 							  'date_added' => 'now()',
