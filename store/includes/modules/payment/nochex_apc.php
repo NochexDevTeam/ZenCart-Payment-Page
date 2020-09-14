@@ -50,16 +50,20 @@ class nochex_apc extends base {
     global $order, $messageStack;
     $this->code = 'nochex_apc';
     if (IS_ADMIN_FLAG === true) {
-      $this->title = defined('MODULE_PAYMENT_NOCHEX_TEXT_ADMIN_TITLE'); // Payment Module title in Admin
+      $this->title = defined('MODULE_PAYMENT_NOCHEX_TEXT_ADMIN_TITLE') ? MODULE_PAYMENT_NOCHEX_TEXT_ADMIN_TITLE : 'Secure Payment by Credit / Debit Card (Nochex)'; // Payment Module title in Admin
     } else {
-      $this->title = defined('MODULE_PAYMENT_NOCHEX_TEXT_CATALOG_TITLE'); // Payment Module title in Catalog
+      $this->title = defined('MODULE_PAYMENT_NOCHEX_TEXT_CATALOG_TITLE') ? MODULE_PAYMENT_NOCHEX_TEXT_CATALOG_TITLE : 'Secure Payment by Credit / Debit Card (Nochex)'; // Payment Module title in Catalog
     }
-    $this->description = defined('MODULE_PAYMENT_NOCHEX_TEXT_DESCRIPTION');
-    $this->sort_order = defined('MODULE_PAYMENT_NOCHEX_SORT_ORDER');
-    $this->enabled = ((defined('MODULE_PAYMENT_NOCHEX_STATUS') == 'True') ? true : false);
-    if ((int)defined('MODULE_PAYMENT_NOCHEX_ORDER_STATUS_ID') > 0) {
-      $this->order_status = defined('MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID');
-    }
+	
+    $this->description = defined('MODULE_PAYMENT_NOCHEX_TEXT_DESCRIPTION') ? MODULE_PAYMENT_NOCHEX_TEXT_DESCRIPTION : null;
+    $this->sort_order = defined('MODULE_PAYMENT_NOCHEX_SORT_ORDER') ? MODULE_PAYMENT_NOCHEX_SORT_ORDER : null;
+	$this->enabled = (defined('MODULE_PAYMENT_NOCHEX_STATUS') && MODULE_PAYMENT_NOCHEX_STATUS == 'True');
+	
+	 if (defined('MODULE_PAYMENT_NOCHEX_ORDER_STATUS_ID') && (int)MODULE_PAYMENT_NOCHEX_ORDER_STATUS_ID > 0) {
+      $this->order_status = MODULE_PAYMENT_NOCHEX_ORDER_STATUS_ID;
+    } else {
+      $this->order_status = defined('MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID') ? MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID : 0;
+	}
 	
     if (is_object($order)) $this->update_status();
     $this->form_action_url = 'https://secure.nochex.com/default.aspx';
@@ -71,9 +75,9 @@ class nochex_apc extends base {
   function update_status() {
     global $order, $db;
 
-    if ( ($this->enabled == true) && ((int)defined('MODULE_PAYMENT_NOCHEX_ZONE') > 0) ) {
+    if ($this->enabled && (int)MODULE_PAYMENT_NOCHEX_ZONE > 0 && isset($order->billing['country']['id'])) {
       $check_flag = false;
-      $check_query = $db->Execute("select zone_id from " . TABLE_ZONES_TO_GEO_ZONES . " where geo_zone_id = '" . defined('MODULE_PAYMENT_NOCHEX_ZONE') . "' and zone_country_id = '" . $order->billing['country']['id'] . "' order by zone_id");
+      $check_query = $db->Execute("SELECT zone_id FROM " . TABLE_ZONES_TO_GEO_ZONES . " WHERE geo_zone_id = '" . MODULE_PAYMENT_NOCHEX_ZONE . "' AND zone_country_id = '" . (int)$order->billing['country']['id'] . "' ORDER BY zone_id");
       while (!$check_query->EOF) {
         if ($check_query->fields['zone_id'] < 1) {
           $check_flag = true;
@@ -89,7 +93,9 @@ class nochex_apc extends base {
         $this->enabled = false;
       }
     }
+	
   }
+  
   /**
    * JS validation which does error-checking of data-entry if this module is selected for use
    * (Number, Owner, and CVV Lengths)
@@ -107,8 +113,8 @@ class nochex_apc extends base {
     */
   function selection() {
     return array('id' => $this->code,
-                 'module' => defined('MODULE_PAYMENT_NOCHEX_TEXT_CATALOG_LOGO'),
-	         'icon' => defined('MODULE_PAYMENT_NOCHEX_TEXT_CATALOG_LOGO'));
+                 'module' => defined('MODULE_PAYMENT_NOCHEX_TEXT_CATALOG_LOGO') ? MODULE_PAYMENT_NOCHEX_TEXT_CATALOG_LOGO : null,
+				 'icon' => defined('MODULE_PAYMENT_NOCHEX_TEXT_CATALOG_LOGO') ? MODULE_PAYMENT_NOCHEX_TEXT_CATALOG_LOGO : null);
   }
   /**
    * Normally evaluates the Credit Card Type for acceptance and the validity of the Credit Card Number & Expiration Date
@@ -175,12 +181,12 @@ class nochex_apc extends base {
   			if(strlen($order->delivery['street_address'])>0) $delivery_address[] = $order->delivery['street_address'];
   			if(strlen($order->delivery['suburb'])>0) $delivery_address[] = $order->delivery['suburb'];
         
-        if(defined('MODULE_PAYMENT_NOCHEX_MERCHANT_ID') == 0){	
+        if(defined('MODULE_PAYMENT_NOCHEX_MERCHANT_ID') == 0 || MODULE_PAYMENT_NOCHEX_MERCHANT_ID == 0){	
 	$ssql = "select configuration_value from " . TABLE_CONFIGURATION . " where configuration_key = 'MODULE_PAYMENT_NOCHEX_MERCHANT_ID'" ;
     	$merchannt = $db->Execute($ssql);
 	$merchant_id = $merchannt->fields["configuration_value"];
 	}else{	
-	$merchant_id = defined('MODULE_PAYMENT_NOCHEX_MERCHANT_ID');
+	$merchant_id = defined('MODULE_PAYMENT_NOCHEX_MERCHANT_ID') ? MODULE_PAYMENT_NOCHEX_MERCHANT_ID : null;
 	}
         
         $payment_fields[] = zen_draw_hidden_field('merchant_id', $merchant_id);
@@ -209,18 +215,18 @@ class nochex_apc extends base {
         $payment_fields[] = zen_draw_hidden_field('email_address', $order->customer['email_address']);		
 		$payment_fields[] = zen_draw_hidden_field('callback_url', zen_href_link('nochex_apc_handler.php', '', 'NONSSL',false,false,true));      		
 		
-		if(defined('MODULE_PAYMENT_NOCHEX_TESTING') == "Test"){
+		if(defined('MODULE_PAYMENT_NOCHEX_TESTING') == "Test" || MODULE_PAYMENT_NOCHEX_TESTING == "Test"){
 			$payment_fields[] = zen_draw_hidden_field('test_transaction', '100');
 		}
 		
-		if(defined('MODULE_PAYMENT_NOCHEX_POSTAGE') == "Yes"){
+		if(defined('MODULE_PAYMENT_NOCHEX_POSTAGE') == "Yes" || MODULE_PAYMENT_NOCHEX_POSTAGE == "Yes"){
 			$payment_fields[] = zen_draw_hidden_field('amount', number_format(($order->info['total'] - $order->info['shipping_cost']) * $currencies->get_value($my_currency), $currencies->get_decimal_places($my_currency)));
 			$payment_fields[] = zen_draw_hidden_field('postage', number_format($order->info['shipping_cost'] * $currencies->get_value($my_currency), $currencies->get_decimal_places($my_currency)));
 		}else{
 			$payment_fields[] = zen_draw_hidden_field('amount', number_format(($order->info['total']) * $currencies->get_value($my_currency), $currencies->get_decimal_places($my_currency)));
 		}
 		
-		if(defined('MODULE_PAYMENT_NOCHEX_XMLITEMCOLLECTION') == "Yes"){
+		if(defined('MODULE_PAYMENT_NOCHEX_XMLITEMCOLLECTION') == "Yes" || MODULE_PAYMENT_NOCHEX_XMLITEMCOLLECTION == "Yes"){
 			$payment_fields[] = zen_draw_hidden_field('xml_item_collection', $xmlData);
 			$payment_fields[] = zen_draw_hidden_field('description', 'Order created for: ' . $nochex_order_id);
 		}else{
@@ -329,7 +335,7 @@ class nochex_apc extends base {
     */
   function remove() {
     global $db;
-    $db->Execute("delete from " . TABLE_CONFIGURATION . " where configuration_key LIKE  'MODULE_PAYMENT_NOCHEX%'");
+    $db->Execute("delete from " . TABLE_CONFIGURATION . " where configuration_key LIKE 'MODULE_PAYMENT_NOCHEX%'");
     $this->notify('NOTIFY_PAYMENT_NOCHEX_UNINSTALLED');
   }
   /**
