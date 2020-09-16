@@ -145,9 +145,13 @@ class nochex_apc extends base {
     global $db, $order, $currencies, $currency;
 
     $this->totalsum = $order->info['total'];
-
+	  
+    $last_order_id = $db->Execute("select * from " . TABLE_ORDERS . " order by orders_id desc limit 1");
+    $new_order_id = $last_order_id->fields['orders_id'];
+    $new_order_id = ($new_order_id + 1);
+	  
     $sql = "insert into " . TABLE_NOCHEX_SESSION . " (session_id, saved_session, expiry) values (
-            '" . session_id() . "',
+            '" . $new_order_id . "',
             '" . base64_encode(serialize($_SESSION)) . "',
             '" . (time() + (1*60*60*24*2)) . "')";
 
@@ -190,16 +194,12 @@ class nochex_apc extends base {
 	}
         
         $payment_fields[] = zen_draw_hidden_field('merchant_id', $merchant_id);
-		
-        $last_order_id = $db->Execute("select * from " . TABLE_ORDERS . " order by orders_id desc limit 1");
-        $new_order_id = $last_order_id->fields['orders_id'];
-        $new_order_id = ($new_order_id + 1);
-				
+					
         $payment_fields[] = zen_draw_hidden_field('order_id', $new_order_id);
         $payment_fields[] = zen_draw_hidden_field('success_url', zen_href_link(FILENAME_CHECKOUT_PROCESS, 'referer=nochex_apc', 'NONSSL'));
         $payment_fields[] = zen_draw_hidden_field('test_success_url', zen_href_link(FILENAME_CHECKOUT_PROCESS, 'referer=nochex_apc', 'NONSSL'));
         $payment_fields[] = zen_draw_hidden_field('cancel_url', zen_href_link(FILENAME_CHECKOUT_PAYMENT, '', 'NONSSL'));          
-        $payment_fields[] = zen_draw_hidden_field('optional_1', zen_session_id());
+        $payment_fields[] = zen_draw_hidden_field('optional_1', $new_order_id);
         $payment_fields[] = zen_draw_hidden_field('optional_2', "cb");
         $payment_fields[] = zen_draw_hidden_field('billing_fullname', $order->customer['firstname']." ".$order->customer['lastname']);
         $payment_fields[] = zen_draw_hidden_field('billing_address', implode("\r\n", $billing_address));
@@ -228,7 +228,7 @@ class nochex_apc extends base {
 		
 		if(defined('MODULE_PAYMENT_NOCHEX_XMLITEMCOLLECTION') == "Yes" || MODULE_PAYMENT_NOCHEX_XMLITEMCOLLECTION == "Yes"){
 			$payment_fields[] = zen_draw_hidden_field('xml_item_collection', $xmlData);
-			$payment_fields[] = zen_draw_hidden_field('description', 'Order created for: ' . $nochex_order_id);
+			$payment_fields[] = zen_draw_hidden_field('description', 'Order created for: ' . $new_order_id);
 		}else{
 			$payment_fields[] = zen_draw_hidden_field('description', $description);
 		}
