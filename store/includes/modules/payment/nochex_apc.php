@@ -250,8 +250,9 @@ class nochex_apc extends base {
       unset($_SESSION['shipping']);
       unset($_SESSION['payment']);
       unset($_SESSION['comments']);
-      unset($_SESSION['cot_gv']);
-   
+      unset($_SESSION['cot_gv']);   
+      unset($_SESSION);
+		
       $order_total_modules->clear_posts();//ICW ADDED FOR CREDIT CLASS SYSTEM
       zen_redirect(zen_href_link(FILENAME_CHECKOUT_SUCCESS, '', 'SSL'));
 	   
