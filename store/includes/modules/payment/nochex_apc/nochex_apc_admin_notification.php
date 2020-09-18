@@ -29,60 +29,64 @@ foreach ($apc->fields as $key=>$value){
 // display all Nochex status fields (in admin Orders page):
           $output = '<td><table>'."\n";
           $output .= '<tr style="background-color : #cccccc; border-style : dotted;">'."\n";
+
           $output .= '<td valign="top"><table>'."\n";
 
           $output .= '<tr><td class="main">'."\n";
-          $output .= defined('MODULE_PAYMENT_NOCHEX_ENTRY_TRANSACTION_ID')."\n";
+          $output .= MODULE_PAYMENT_NOCHEX_ENTRY_TRANSACTION_ID."\n";
           $output .= '</td><td class="main">'."\n";
           $output .= $apc->fields['nc_transaction_id']."\n";
           $output .= '</td></tr>'."\n";
           
           $output .= '<tr><td class="main">'."\n";
-          $output .= defined('MODULE_PAYMENT_NOCHEX_ENTRY_TRANSACTION_DATE')."\n";
+          $output .= MODULE_PAYMENT_NOCHEX_ENTRY_TRANSACTION_DATE."\n";
           $output .= '</td><td class="main">'."\n";
           $output .= $apc->fields['nc_transaction_date']."\n";
           $output .= '</td></tr>'."\n";
           
           $output .= '<tr><td class="main">'."\n";
-          $output .= defined('MODULE_PAYMENT_NOCHEX_ENTRY_TO_EMAIL')."\n";
+          $output .= MODULE_PAYMENT_NOCHEX_ENTRY_TO_EMAIL."\n";
           $output .= '</td><td class="main">'."\n";
           $output .= $apc->fields['nc_to_email']."\n";
           $output .= '</td></tr>'."\n";
 
           $output .= '<tr><td class="main">'."\n";
-          $output .= defined('MODULE_PAYMENT_NOCHEX_ENTRY_FROM_EMAIL')."\n";
+          $output .= MODULE_PAYMENT_NOCHEX_ENTRY_FROM_EMAIL."\n";
           $output .= '</td><td class="main">'."\n";
           $output .= $apc->fields['nc_from_email']."\n";
           $output .= '</td></tr>'."\n";
           $output .= '<tr><td class="main">'."\n";
-          $output .= defined('MODULE_PAYMENT_NOCHEX_ENTRY_ORDER_ID')."\n";
+          $output .= MODULE_PAYMENT_NOCHEX_ENTRY_ORDER_ID."\n";
           $output .= '</td><td class="main">'."\n";
           $output .= $apc->fields['nc_order_id']."\n";
           $output .= '</td></tr>'."\n";
           $output .= '<tr><td class="main">'."\n";
-          $output .= defined('MODULE_PAYMENT_NOCHEX_ENTRY_CUSTOM')."\n";
+          $output .= MODULE_PAYMENT_NOCHEX_ENTRY_CUSTOM."\n";
           $output .= '</td><td class="main">'."\n";
           $output .= $apc->fields['nc_custom']."\n";
           $output .= '</td></tr>'."\n";
           $output .= '<tr><td class="main">'."\n";
-          $output .= defined('MODULE_PAYMENT_NOCHEX_ENTRY_AMOUNT')."\n";
+          $output .= MODULE_PAYMENT_NOCHEX_ENTRY_AMOUNT."\n";
           $output .= '</td><td class="main">'."\n";
           $output .= $apc->fields['nc_amount']."\n";
           $output .= '</td></tr>'."\n";
           $output .= '<tr><td class="main">'."\n";
-          $output .= defined('MODULE_PAYMENT_NOCHEX_ENTRY_SECURITY_KEY')."\n";
+          $output .= MODULE_PAYMENT_NOCHEX_ENTRY_SECURITY_KEY."\n";
           $output .= '</td><td class="main">'."\n";
           $output .= $apc->fields['nc_security_key']."\n";
           $output .= '</td></tr>'."\n";
 
+          //$output .= '</table></td>'."\n";
+          //$output .= '<td valign="top"><table>'."\n";
+
           $output .= '<tr><td class="main">'."\n";
-          $output .= defined('MODULE_PAYMENT_NOCHEX_ENTRY_STATUS')."\n";
+          $output .= MODULE_PAYMENT_NOCHEX_ENTRY_STATUS."\n";
           $output .= '</td><td class="main">'."\n";
           $output .= $apc->fields['nc_status']."\n";
           $output .= '</td></tr>'."\n";
           
           $output .= '<tr><td class="main">'."\n";
-          $output .= defined('MODULE_PAYMENT_NOCHEX_ENTRY_NOCHEX_RESPONSE')."\n";
+          $output .= MODULE_PAYMENT_NOCHEX_ENTRY_NOCHEX_RESPONSE."\n";
           $output .= '</td><td class="main">'."\n";
           $output .= $apc->fields['nochex_response']."\n";
           $output .= '</td></tr>'."\n";
