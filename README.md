@@ -8,6 +8,10 @@ To Install and Setup the Nochex module please follow our integration guide, whic
 Changelog
 =====================
 
+= 1.2.8 =
+
+ - Bug fixes in relation to the latest version of ZenCart
+
 = 1.2.7 =
 
  - Bug fixes in relation to the latest version of ZenCart
