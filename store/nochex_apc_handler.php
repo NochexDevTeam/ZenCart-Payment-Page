@@ -17,6 +17,7 @@ require('includes/languages/english/modules/payment/nochex_apc.php');
 
 require('includes/languages/english/checkout_process.php');
 
+global $db;
 /* APC Code */
 // Payment confirmation from http post 
 ini_set("SMTP","mail.nochex.com"); 
@@ -104,10 +105,10 @@ if($_POST["optional_2"] == "cb"){
  
 	if (!strstr($response, "AUTHORISED")) {   
 		$msg = "Callback was not AUTHORISED.";   
-		$new_status = defined('MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID') ? MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID : 0;
+		$new_status = defined('MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID') ? MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID : 1;
 	} else { 
 		$msg = "Callback was Authorised";	
-		$new_status = defined('MODULE_PAYMENT_NOCHEX_PROCESSING_STATUS_ID') ? MODULE_PAYMENT_NOCHEX_PROCESSING_STATUS_ID : 0; 
+		$new_status = defined('MODULE_PAYMENT_NOCHEX_PROCESSING_STATUS_ID') ? MODULE_PAYMENT_NOCHEX_PROCESSING_STATUS_ID : 2; 
 	} 
 	
 	$comments = 'Nochex payment of '.sprintf("%01.2f", $trans_amount).' received at '.$trans_date.' with transaction ID:'.$trans_Id. ' this was a '. $status .' transaction, ' .$msg;     
@@ -150,12 +151,12 @@ $trans_amount = $_POST["amount"];
 if (!strstr($response, "AUTHORISED")) {  // searches response to see if AUTHORISED is present if it isn’t a failure message is displayed
 
     $msg = "APC was not AUTHORISED.";  // displays debug message	
-    $new_status = defined('MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID')  ? MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID : 0;
+    $new_status = defined('MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID')  ? MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID : 1;
 
 } else { 
 
    $msg = "APC was Authorised";	
-   $new_status = defined('MODULE_PAYMENT_NOCHEX_PROCESSING_STATUS_ID') ? MODULE_PAYMENT_NOCHEX_PROCESSING_STATUS_ID : 0;
+   $new_status = defined('MODULE_PAYMENT_NOCHEX_PROCESSING_STATUS_ID') ? MODULE_PAYMENT_NOCHEX_PROCESSING_STATUS_ID : 2;
    
 } 
 
@@ -213,6 +214,21 @@ if ($checkSession == true) {
 	  /*deprecated function and variables that are causing warning php error logs when creating and sending email in includes/classes/order.php - lines 1060 to 1205 but still works for sending email confirmation */
 	  $order->send_order_email($insert_id);
 	
+if ($order->info['total'] <> $_POST["amount"]) {
+		/**/
+		$statusPen = defined('MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID') ? MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID : 1;
+		$sql_data_array = array('orders_id' => $insert_id,
+							  'orders_status_id' => $statusPen,
+							  'date_added' => 'now()',
+							  'comments' => "Paid amount ". $_POST["amount"] . " does not match the order total! " . number_format($order->info['total'],2),
+							  'customer_notified' => '0',
+							  'updated_by' => 'Nochex'
+	  );
+	  	  
+	  $sqlPen = 'UPDATE ' . TABLE_ORDERS . ' set orders_status = "'.$statusPen.'" where orders_id = "' .(int)$insert_id. '"';	  
+	  $db->Execute($sqlPen);
+	  
+	} else {
 	  $sql_data_array = array('orders_id' => $insert_id,
 							  'orders_status_id' => $new_status,
 							  'date_added' => 'now()',
@@ -220,8 +236,10 @@ if ($checkSession == true) {
 							  'customer_notified' => '0',
 							  'updated_by' => 'Nochex'
 	  );
+}
+	
 	  zen_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
-
+	
 } else {
 
 apc_debug_email('Could not find stored session in DB, so unable to create an order, check Nochex_apc_transactions table for order'); 
