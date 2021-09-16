@@ -8,6 +8,10 @@ To Install and Setup the Nochex module please follow our integration guide, whic
 Changelog
 =====================
 
+= 1.2.9 =
+
+- Small update to APC / Callback functionality
+
 = 1.2.8 =
 
  - Bug fixes in relation to the latest version of ZenCart
