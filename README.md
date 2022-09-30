@@ -1,5 +1,6 @@
 Nochex Module for ZenCart
 ============
+Tested up to ZenCart version: 1.5.7d
 
 Installation
 ============
