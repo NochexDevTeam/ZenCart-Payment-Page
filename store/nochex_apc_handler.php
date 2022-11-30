@@ -15,7 +15,7 @@ require('includes/modules/payment/nochex_apc/nochex_functions.php');
 /* Include checkout_process in relation to the session language **/
 require('includes/languages/english/modules/payment/nochex_apc.php');
 
-require('includes/languages/english/checkout_process.php');
+require('includes/languages/english/lang.checkout_process.php');
 
 global $db;
 /* APC Code */
