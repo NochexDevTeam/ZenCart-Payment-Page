@@ -1,6 +1,6 @@
 Nochex Module for ZenCart
 ============
-Tested up to ZenCart version: 1.5.7d
+Tested up to ZenCart version: 1.5.8
 
 Installation
 ============
@@ -8,6 +8,9 @@ To Install and Setup the Nochex module please follow our integration guide, whic
 
 Changelog
 =====================
+= 1.2.10 =
+
+- Bug fixes in relation to the latest version of ZenCart
 
 = 1.2.9 =
 
