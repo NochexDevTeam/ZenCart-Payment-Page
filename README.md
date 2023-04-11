@@ -8,6 +8,10 @@ To Install and Setup the Nochex module please follow our integration guide, whic
 
 Changelog
 =====================
+= 1.2.11 =
+
+- Small change to APC page
+
 = 1.2.10 =
 
 - Bug fixes in relation to the latest version of ZenCart
