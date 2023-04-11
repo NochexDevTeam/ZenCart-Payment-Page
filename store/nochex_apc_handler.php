@@ -134,7 +134,7 @@ $checkSession = apc_get_stored_session($_POST["optional_1"]);
 
 }else{
 
-$response = http_post("ssl://www.nochex.com", 443, "/apcnet/apc.aspx", $_POST); 
+$response = http_post("ssl://secure.nochex.com", 443, "/apc/apc.aspx", $_POST); 
 // stores the response from the Nochex server 
 $debug = "IP -> " . $_SERVER['REMOTE_ADDR'] ."\r\n\r\nPOST DATA:\r\n"; 
 foreach($_POST as $Index => $Value) 
