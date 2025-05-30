@@ -8,6 +8,10 @@ To Install and Setup the Nochex module please follow our integration guide, whic
 
 Changelog
 =====================
+= 1.2.12 =
+
+- Small change to APC / Callback functionality, and include a User-Agent
+  
 = 1.2.11 =
 
 - Small change to APC page
