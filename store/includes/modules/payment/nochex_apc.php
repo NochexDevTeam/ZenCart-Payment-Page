@@ -56,17 +56,17 @@ class nochex_apc extends base {
     }
 	
     $this->description = defined('MODULE_PAYMENT_NOCHEX_TEXT_DESCRIPTION') ? MODULE_PAYMENT_NOCHEX_TEXT_DESCRIPTION : null;
-    $this->sort_order = defined('MODULE_PAYMENT_NOCHEX_SORT_ORDER') ? MODULE_PAYMENT_NOCHEX_SORT_ORDER : null;
+    $this->sort_order = defined('MODULE_PAYMENT_NOCHEX_SORT_ORDER') ? MODULE_PAYMENT_NOCHEX_SORT_ORDER : null;//deprecated	
 	$this->enabled = (defined('MODULE_PAYMENT_NOCHEX_STATUS') && MODULE_PAYMENT_NOCHEX_STATUS == 'True');
 	
 	 if (defined('MODULE_PAYMENT_NOCHEX_ORDER_STATUS_ID') && (int)MODULE_PAYMENT_NOCHEX_ORDER_STATUS_ID > 0) {
-      $this->order_status = MODULE_PAYMENT_NOCHEX_ORDER_STATUS_ID;
+      $this->order_status = MODULE_PAYMENT_NOCHEX_ORDER_STATUS_ID;//deprecated
     } else {
-      $this->order_status = defined('MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID') ? MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID : 0;
+      $this->order_status = defined('MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID') ? MODULE_PAYMENT_NOCHEX_PENDING_STATUS_ID : 0;//deprecated
 	}
 	
     if (is_object($order)) $this->update_status();
-    $this->form_action_url = 'https://secure.nochex.com/default.aspx';
+    $this->form_action_url = 'https://secure.nochex.com/default.aspx';//deprecated
   }
   /**
    * calculate zone matches and flag settings to determine whether this module should display to customers or not
@@ -147,7 +147,11 @@ class nochex_apc extends base {
     $this->totalsum = $order->info['total'];
 	  
     $last_order_id = $db->Execute("select * from " . TABLE_ORDERS . " order by orders_id desc limit 1");
-    $new_order_id = $last_order_id->fields['orders_id'];
+	if(!empty($last_order_id->fields['orders_id'])){
+		$new_order_id = $last_order_id->fields['orders_id'];
+	}else{
+		$new_order_id = 0;
+	}
     $new_order_id = ($new_order_id + 1);
 	  
     $sql = "insert into " . TABLE_NOCHEX_SESSION . " (session_id, saved_session, expiry) values (
