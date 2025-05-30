@@ -23,34 +23,8 @@ global $db;
 ini_set("SMTP","mail.nochex.com"); 
 $header = "From: apc@nochex.com";
 
-$your_email = $_POST["to_email"];  // your merchant account email address
+$your_email = isset($_POST["to_email"]);  // your merchant account email address
   
-function http_secure_post($server, $port, $url, $vars) { 
-
-    // get urlencoded vesion of $vars array 
-    $urlencoded = ""; 
-    foreach ($vars as $Index => $Value) // loop round variables and encode them to be used in query
-    $urlencoded .= urlencode($Index ) . "=" . urlencode($Value) . "&"; 
-    $urlencoded = substr($urlencoded,0,-1);   // returns portion of string, everything but last character
-
-    $headers = "POST $url HTTP/1.0\r\n"  // headers to be sent to the server
-    . "Content-Type: application/x-www-form-urlencoded\r\n" 
-    . "Host: secure.nochex.com\r\n" 
-    . "Content-Length: ". strlen($urlencoded) . "\r\n\r\n";  // length of the string
-  
-    $fp = fsockopen($server, $port, $errno, $errstr, 20);  // returns file pointer
-    if (!$fp) return "ERROR: fsockopen failed.\r\nError no: $errno - $errstr";  // if cannot open socket then display error message
-
-    fputs($fp, $headers);  //writes to file pointer
-    fputs($fp, $urlencoded);  
-  
-    $ret = ""; 
-    while (!feof($fp)) $ret .= fgets($fp, 1024); // while it’s not the end of the file it will loop 
-    fclose($fp);  // closes the connection
-	
-    return $ret; // array 
-	
-} 
 
 function http_post($server, $port, $url, $vars) { 
 
@@ -62,7 +36,8 @@ function http_post($server, $port, $url, $vars) {
 
     $headers = "POST $url HTTP/1.0\r\n"  // headers to be sent to the server
     . "Content-Type: application/x-www-form-urlencoded\r\n" 
-    . "Host: www.nochex.com\r\n" 
+    . "User-Agent: Nochexapc/1.0\r\n" 
+    . "Host: secure.nochex.com\r\n" 
     . "Content-Length: ". strlen($urlencoded) . "\r\n\r\n";  // length of the string
   
     $fp = fsockopen($server, $port, $errno, $errstr, 20);  // returns file pointer
@@ -79,12 +54,15 @@ function http_post($server, $port, $url, $vars) {
 	
 }
 
+
+
 if (isset($_POST["order_id"])){
 
-if($_POST["optional_2"] == "cb"){
+
+if(isset($_POST["optional_2"]) == "cb"){
 
 // stores the response from the Nochex server   
-	$response = http_secure_post("ssl://secure.nochex.com", 443, "/callback/callback.aspx", $_POST); 
+	$response = http_post("ssl://secure.nochex.com", 443, "/callback/callback.aspx", $_POST); 
 
 	// Callback Debug
 	$debug = "IP -> " . $_SERVER['REMOTE_ADDR'] ."\r\n\r\nPOST DATA:\r\n"; 
@@ -133,6 +111,7 @@ $checkSession = apc_get_stored_session($_POST["optional_1"]);
    
 
 }else{
+
 
 $response = http_post("ssl://secure.nochex.com", 443, "/apc/apc.aspx", $_POST); 
 // stores the response from the Nochex server 
@@ -212,7 +191,7 @@ if ($checkSession == true) {
 	  
 	  $order->create_add_products($insert_id, 2);
 	  /*deprecated function and variables that are causing warning php error logs when creating and sending email in includes/classes/order.php - lines 1060 to 1205 but still works for sending email confirmation */
-	  $order->send_order_email($insert_id);
+	  //$order->send_order_email($insert_id, 2);
 	
 if ($order->info['total'] <> $_POST["amount"]) {
 		/**/
@@ -245,7 +224,7 @@ if ($order->info['total'] <> $_POST["amount"]) {
 apc_debug_email('Could not find stored session in DB, so unable to create an order, check Nochex_apc_transactions table for order'); 
 
 }
-  
-}
+ }
+
 
 ?>  
